@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Where Truth Blooms - Upanishads Visualization</title>
+    <title>Tracing the Concept of Truth - Upanishads Visualization</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -27,10 +27,10 @@
             <!-- Title Page -->
             <div class="intro-page intro-title-page">
                 <div class="intro-content title-content">
-                    <h2>Where Truth Blooms</h2>
-                    <p class="intro-tagline">A computational exploration of how truth unfolds<br>across the verses of the Upanishads</p>
+                    <h2>Tracing the Concept of Truth</h2>
+                    <p class="intro-tagline">A computational exploration of how the concept of truth is expressed<br>across the verses of the Upanishads</p>
                     <p class="author">Priyanka Karnam</p>
-                    <p class="date">March 15, 2026</p>
+                    <p class="date">Jul 1, 2026</p>
                 </div>
                 <div class="scroll-hint">
                     <span>Scroll to explore</span>
@@ -41,20 +41,24 @@
             <!-- Overview Page -->
             <div class="intro-page intro-overview-page">
                 <div class="intro-content">
-                    <p class="intro-lead">
-                        The Upanishads are late Vedic Sanskrit texts that form the concluding, wisdom-centered portion of the Vedas. Composed roughly between 700–300 BCE, they explore themes of meditation, philosophy, consciousness, and the nature of reality. A central teaching is that the individual soul, Atman, is identical to the ultimate universal reality, Brahman. The texts also engage with concepts such as karma, reincarnation, and enlightenment, emphasizing knowledge and self-realization over ritual practices.
+                    <p class="intro-section-header"><strong>WHAT?</strong></p>
+                    <p class="intro-text">
+                        The Upanishads are late Vedic Sanskrit texts that form the concluding, wisdom-centered portion of the Vedas. Composed roughly between 700–300 BCE, they explore themes of meditation, philosophy, consciousness, and the nature of reality. A central teaching is that the individual soul, Atman, is identical to the ultimate universal reality, Brahman. The texts also engage with concepts such as karma, reincarnation, and enlightenment, emphasizing knowledge and self-realization over ritual practices. Traditionally, 108 Upanishads are recognized and associated with the four Vedas: Rigveda, Yajurveda, Samaveda, and Atharvaveda.
+                    </p>
+                    <p class="intro-section-header"><strong>HOW?</strong></p>
+                    <p class="intro-text">
+                        This project applies natural language processing (NLP) to examine the emotional and philosophical contexts surrounding the concept of "truth" across the Upanishadic texts. The analysis focuses on several key terms associated with the idea of truth: <strong>Truth</strong>, <strong>Satya</strong> (the Sanskrit term for truth), <strong>Sat</strong> (meaning true, real, abiding, or being), and <strong>Tattva</strong>, a foundational Sanskrit philosophical concept meaning "thatness," "principle," "reality," or "truth." These words capture different dimensions of truth as expressed within the Upanishadic texts.
                     </p>
                     <p class="intro-text">
-                        Traditionally, 108 Upanishads are recognized and associated with the four Vedas: Rigveda, Yajurveda, Samaveda, and Atharvaveda.This project applies natural language processing (NLP) to examine the emotional and philosophical contexts surrounding the concept of "truth" across the Upanishadic texts. The visualizations explore how truth is expressed within the Upanishads, highlighting both its emotional resonance and its philosophical dimensions.
+                        To support this analysis, the TF-IDF method is used to identify the frequency and importance of key terms. Sentence-BERT (SBERT) is applied to understand semantic and philosophical context through sentence embeddings, while semantic analysis techniques are used to interpret the emotional tone of sentences containing references to truth. The source text for this analysis is the compilation of 108 Upanishads, available here: <a href="https://tomdas.com/wp-content/uploads/2022/01/108-upanishads.pdf" target="_blank" style="color: #526B0B;">108 Upanishads PDF</a>
                     </p>
+                    <p class="intro-section-header"><strong>WHY?</strong></p>
                     <p class="intro-text">
-                        To support this analysis, the TF-IDF method is used to identify the frequency and importance of key terms. Sentence-BERT (SBERT) is applied to understand semantic and philosophical context through sentence embeddings, while semantic analysis techniques are used to interpret the emotional tone of sentences containing references to truth.The source text for this analysis is the compilation of 108 Upanishads, available here: <a href="https://tomdas.com/wp-content/uploads/2022/01/108-upanishads.pdf" target="_blank" style="color: #526B0B;">https://tomdas.com/wp-content/uploads/2022/01/108-upanishads.pdf</a>
+                        The visualizations explore how truth is expressed within the Upanishads, highlighting both its emotional resonance and its philosophical dimensions. By combining computational methods with ancient wisdom texts, this project offers a unique lens through which to examine one of humanity's most enduring concepts.
                     </p>
-                    <p class="intro-text">
-                        The analysis focuses on several key terms associated with the idea of truth: <strong>Truth</strong>, <strong>Satya</strong> (the Sanskrit term for truth), <strong>Sat</strong> (meaning true, real, abiding, or being), and <strong>Tattva</strong>, a foundational Sanskrit philosophical concept meaning "thatness," "principle," "reality," or "truth." These words capture different dimensions of truth as expressed within the Upanishadic texts.
+                    <p class="intro-text intro-fact">
+                       <strong>Do you know?</strong> The Indian national motto, "Satyameva Jayate" meaning "Truth alone triumphs", is derived from the Mundaka Upanishad, a text associated with the Atharvaveda.
                     </p>
-                    <p class="intro-text">
-                       <strong>Did you know?</strong><br>The Indian national motto, "Satyameva Jayate" meaning "Truth alone triumphs", is derived from the Mundaka Upanishad, a text associated with the Atharvaveda.</p>
                 </div>
             </div>
         </section>
@@ -209,15 +213,21 @@
                     <div class="legend-veda-colors">
                         <div class="legend-item-inline">
                             <svg width="14" height="12" viewBox="0 0 14 12">
-                                <line x1="2" y1="6" x2="12" y2="6" stroke="#f8d7da" stroke-width="2"/>
+                                <line x1="2" y1="6" x2="12" y2="6" stroke="#E39098" stroke-width="2"/>
                             </svg>
-                            <span>Low context score</span>
+                            <span>Low (&lt;0.5)</span>
                         </div>
                         <div class="legend-item-inline">
                             <svg width="14" height="12" viewBox="0 0 14 12">
-                                <line x1="2" y1="6" x2="12" y2="6" stroke="#B5204B" stroke-width="2"/>
+                                <line x1="2" y1="6" x2="12" y2="6" stroke="#D55971" stroke-width="2"/>
                             </svg>
-                            <span>High context score</span>
+                            <span>Medium (0.5-0.8)</span>
+                        </div>
+                        <div class="legend-item-inline">
+                            <svg width="14" height="12" viewBox="0 0 14 12">
+                                <line x1="2" y1="6" x2="12" y2="6" stroke="#B91645" stroke-width="2"/>
+                            </svg>
+                            <span>High (&gt;0.8)</span>
                         </div>
                     </div>
                 </div>
