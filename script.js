@@ -1,5 +1,14 @@
 // ==================== SCROLLYTELLING SETUP ====================
 
+// Mobile detection helper
+function isMobile() {
+    return window.innerWidth <= 768;
+}
+
+function isSmallMobile() {
+    return window.innerWidth <= 480;
+}
+
 // Scroll to section function
 window.scrollToSection = function(sectionName) {
     const section = document.getElementById(sectionName + '-section');
@@ -111,6 +120,9 @@ const vedaColors = {
     "Atharvaveda": "#BC2D12"
 };
 
+// Track active tooltip element for touch devices
+let activeTooltipElement = null;
+
 // Simple tooltip functions - uses clientX/clientY for fixed positioning
 function showTooltipAt(event, html) {
     const tip = document.getElementById('tooltip');
@@ -118,18 +130,36 @@ function showTooltipAt(event, html) {
         tip.innerHTML = html;
         tip.style.display = 'block';
 
+        // Get coordinates - support both mouse and touch events
+        let clientX, clientY;
+        if (event.touches && event.touches.length > 0) {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        }
+
         // Check if tooltip would go off the bottom of the screen
         const tipHeight = tip.offsetHeight || 150; // estimate if not yet rendered
-        const spaceBelow = window.innerHeight - event.clientY;
+        const tipWidth = tip.offsetWidth || 200;
+        const spaceBelow = window.innerHeight - clientY;
+        const spaceRight = window.innerWidth - clientX;
 
-        tip.style.left = (event.clientX + 15) + 'px';
-
-        if (spaceBelow < tipHeight + 30) {
-            // Show tooltip above cursor
-            tip.style.top = (event.clientY - tipHeight - 15) + 'px';
+        // Horizontal positioning - keep tooltip on screen
+        if (spaceRight < tipWidth + 20) {
+            tip.style.left = Math.max(10, clientX - tipWidth - 15) + 'px';
         } else {
-            // Show tooltip below cursor
-            tip.style.top = (event.clientY + 15) + 'px';
+            tip.style.left = (clientX + 15) + 'px';
+        }
+
+        // Vertical positioning
+        if (spaceBelow < tipHeight + 30) {
+            // Show tooltip above cursor/touch
+            tip.style.top = Math.max(10, clientY - tipHeight - 15) + 'px';
+        } else {
+            // Show tooltip below cursor/touch
+            tip.style.top = (clientY + 15) + 'px';
         }
     }
 }
@@ -139,7 +169,37 @@ function hideTooltipNow() {
     if (tip) {
         tip.style.display = 'none';
     }
+    activeTooltipElement = null;
 }
+
+// Touch event handler for tooltips - tap to show, tap elsewhere to hide
+function setupTouchTooltip(element, tooltipHtml) {
+    element.on('touchstart', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // If tapping the same element, toggle off
+        if (activeTooltipElement === this) {
+            hideTooltipNow();
+            return;
+        }
+
+        // Show tooltip for this element
+        activeTooltipElement = this;
+        showTooltipAt(event, tooltipHtml);
+    });
+}
+
+// Global touch handler to dismiss tooltip when tapping elsewhere
+document.addEventListener('touchstart', function(event) {
+    const tip = document.getElementById('tooltip');
+    if (tip && tip.style.display === 'block') {
+        // Check if tap is outside the tooltip
+        if (!tip.contains(event.target) && activeTooltipElement !== event.target) {
+            hideTooltipNow();
+        }
+    }
+}, { passive: true });
 
 // Helper function to extract truth words from text
 function extractTruthWords(text) {
@@ -341,12 +401,20 @@ function initFlowersViz() {
     const container = document.getElementById('visualization');
     const containerRect = container.getBoundingClientRect();
 
-    // Responsive dimensions - use larger fallbacks
-    const width = Math.max(containerRect.width, 600, window.innerWidth * 0.55);
-    const height = Math.max(containerRect.height, 500, window.innerHeight * 0.7);
-    const radius = Math.min(width, height) * 0.7;
+    // Responsive dimensions based on screen size
+    let width, height;
+    if (isMobile()) {
+        // On mobile, use full container width
+        width = Math.max(containerRect.width, window.innerWidth * 0.95);
+        height = Math.max(containerRect.height, window.innerHeight * 0.55, 300);
+    } else {
+        // Desktop: use larger dimensions
+        width = Math.max(containerRect.width, 600, window.innerWidth * 0.55);
+        height = Math.max(containerRect.height, 500, window.innerHeight * 0.7);
+    }
+    const radius = Math.min(width, height) * (isMobile() ? 0.65 : 0.7);
 
-    console.log('Initializing Truth Flowers:', width, height);
+    console.log('Initializing Truth Flowers:', width, height, 'Mobile:', isMobile());
 
     // Create SVG with viewBox for responsiveness
     const svg = d3.select("#visualization")
@@ -562,6 +630,11 @@ function initFlowersViz() {
                             const truthWord = child.data.words_found;
                             const sentence = child.data.full_sentence || child.data.name;
 
+                            const tooltipContent = `<h3>${upanishadName}</h3>
+                                         <p><strong>Veda:</strong> ${vedaName}</p>
+                                         <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
+                                         <p>${sentence}</p>`;
+
                             const petal = group.append("path")
                                 .attr("class", "petal")
                                 .attr("d", `M ${diamondSize},0
@@ -576,22 +649,29 @@ function initFlowersViz() {
                                 .attr("opacity", 0.85)
                                 .on("mouseover", function(event) {
                                     d3.select(this).attr("opacity", 1).attr("stroke-width", radius * 0.003);
-                                    showTooltipAt(event,
-                                        `<h3>${upanishadName}</h3>
-                                         <p><strong>Veda:</strong> ${vedaName}</p>
-                                         <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
-                                         <p>${sentence}</p>`);
+                                    showTooltipAt(event, tooltipContent);
                                 })
                                 .on("mouseout", function() {
                                     d3.select(this).attr("opacity", 0.85).attr("stroke-width", radius * 0.001);
                                     hideTooltipNow();
                                 })
                                 .on("mousemove", function(event) {
-                                    showTooltipAt(event,
-                                        `<h3>${upanishadName}</h3>
-                                         <p><strong>Veda:</strong> ${vedaName}</p>
-                                         <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
-                                         <p>${sentence}</p>`);
+                                    showTooltipAt(event, tooltipContent);
+                                })
+                                .on("touchstart", function(event) {
+                                    event.preventDefault();
+                                    if (activeTooltipElement === this) {
+                                        hideTooltipNow();
+                                        d3.select(this).attr("opacity", 0.85).attr("stroke-width", radius * 0.001);
+                                    } else {
+                                        // Reset previous active element
+                                        if (activeTooltipElement) {
+                                            d3.select(activeTooltipElement).attr("opacity", 0.85);
+                                        }
+                                        activeTooltipElement = this;
+                                        d3.select(this).attr("opacity", 1).attr("stroke-width", radius * 0.003);
+                                        showTooltipAt(event, tooltipContent);
+                                    }
                                 });
 
                         });
@@ -662,11 +742,19 @@ function initEmotionsViz() {
     const container = document.getElementById('emotions-viz');
     const containerRect = container.getBoundingClientRect();
 
-    // Responsive dimensions - use full container size
-    const eWidth = Math.max(containerRect.width, window.innerWidth * 0.65);
-    const eHeight = Math.max(containerRect.height, window.innerHeight * 0.85);
+    // Responsive dimensions based on screen size
+    let eWidth, eHeight;
+    if (isMobile()) {
+        // On mobile, use full width and adjust height
+        eWidth = Math.max(containerRect.width, window.innerWidth * 0.95);
+        eHeight = Math.max(containerRect.height, window.innerHeight * 0.55, 320);
+    } else {
+        // Desktop
+        eWidth = Math.max(containerRect.width, window.innerWidth * 0.65);
+        eHeight = Math.max(containerRect.height, window.innerHeight * 0.85);
+    }
 
-    console.log('Initializing Emotions:', eWidth, eHeight);
+    console.log('Initializing Emotions:', eWidth, eHeight, 'Mobile:', isMobile());
 
     const emotionColors = {
         "reverence": "#E8A87C",
@@ -827,6 +915,13 @@ function initEmotionsViz() {
 
                     const rotateAngle = totalSentences <= 2 ? (sIdx === 0 ? -45 : 45) : direction * 35;
 
+                    const emotionTruthWord = extractTruthWords(sentence.text);
+                    const emotionTooltipContent = `<h3>${emotion.name}</h3>
+                                       <p><strong>Veda:</strong> ${sentence.veda}</p>
+                                       <p><strong>Sentiment Score:</strong> ${score.toFixed(2)}</p>
+                                       <p><strong>Truth Word:</strong> <span class="truth-word">${emotionTruthWord}</span></p>
+                                       <p>${sentence.text}</p>`;
+
                     emotionsSvg.append("path")
                         .attr("d", petalPath)
                         .attr("fill", petalColor)
@@ -837,24 +932,28 @@ function initEmotionsViz() {
                         .style("cursor", "pointer")
                         .on("mouseover", function(event) {
                             d3.select(this).attr("opacity", 1).attr("stroke-width", 1.5);
-                            const truthWord = extractTruthWords(sentence.text);
-                            showTooltipAt(event, `<h3>${emotion.name}</h3>
-                                       <p><strong>Veda:</strong> ${sentence.veda}</p>
-                                       <p><strong>Sentiment Score:</strong> ${score.toFixed(2)}</p>
-                                       <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
-                                       <p>${sentence.text}</p>`);
+                            showTooltipAt(event, emotionTooltipContent);
                         })
                         .on("mouseout", function() {
                             d3.select(this).attr("opacity", 0.85).attr("stroke-width", 0.5);
                             hideTooltipNow();
                         })
                         .on("mousemove", function(event) {
-                            const truthWord = extractTruthWords(sentence.text);
-                            showTooltipAt(event, `<h3>${emotion.name}</h3>
-                                       <p><strong>Veda:</strong> ${sentence.veda}</p>
-                                       <p><strong>Sentiment Score:</strong> ${score.toFixed(2)}</p>
-                                       <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
-                                       <p>${sentence.text}</p>`);
+                            showTooltipAt(event, emotionTooltipContent);
+                        })
+                        .on("touchstart", function(event) {
+                            event.preventDefault();
+                            if (activeTooltipElement === this) {
+                                hideTooltipNow();
+                                d3.select(this).attr("opacity", 0.85).attr("stroke-width", 0.5);
+                            } else {
+                                if (activeTooltipElement) {
+                                    d3.select(activeTooltipElement).attr("opacity", 0.85);
+                                }
+                                activeTooltipElement = this;
+                                d3.select(this).attr("opacity", 1).attr("stroke-width", 1.5);
+                                showTooltipAt(event, emotionTooltipContent);
+                            }
                         });
                 });
             });
@@ -897,11 +996,19 @@ function initContextViz() {
     const container = document.getElementById('context-viz');
     const containerRect = container.getBoundingClientRect();
 
-    // Responsive dimensions - use full container size
-    const cWidth = Math.max(containerRect.width, window.innerWidth * 0.65);
-    const cHeight = Math.max(containerRect.height, window.innerHeight * 0.85);
+    // Responsive dimensions based on screen size
+    let cWidth, cHeight;
+    if (isMobile()) {
+        // On mobile, use full width and adjust height
+        cWidth = Math.max(containerRect.width, window.innerWidth * 0.95);
+        cHeight = Math.max(containerRect.height, window.innerHeight * 0.55, 320);
+    } else {
+        // Desktop
+        cWidth = Math.max(containerRect.width, window.innerWidth * 0.65);
+        cHeight = Math.max(containerRect.height, window.innerHeight * 0.85);
+    }
 
-    console.log('Initializing Context:', cWidth, cHeight);
+    console.log('Initializing Context:', cWidth, cHeight, 'Mobile:', isMobile());
 
     const contextVedaColors = {
         "Rigveda": "#DC080B",
@@ -942,7 +1049,7 @@ function initContextViz() {
             const lotusX = pos.x;
             const lotusY = pos.y;
             const contextRatio = (context.count || 0) / maxContextCount;
-            const scale = pos.scale * (0.5 + contextRatio * 0.5);
+            const scale = pos.scale * (0.5 + contextRatio * 0.5) * 1.1;  // 10% larger
 
             const vedaCounts = {};
             vedaOrder.forEach(v => vedaCounts[v] = 0);
@@ -979,11 +1086,53 @@ function initContextViz() {
 
             sortedVedas.forEach(({ veda, count, originalIdx }) => {
                 const petalIdx = originalIdx;
+
+                // Get sentences for this veda to calculate line spread
+                const vedaSentences = (context.sentences || []).filter(s => s.veda === veda);
+                const totalLines = vedaSentences.length;
+
+                // Skip if no sentences
+                if (totalLines === 0) return;
+
+                // Fixed gap between lines
+                const fixedGap = cWidth * 0.0055;
+                const totalSpread = (totalLines - 1) * fixedGap;
+
+                // Petal width smaller than line spread - bezier will bulge to match lines
+                const petalWidth = totalSpread * 0.65 * scale;
+
+                // Petal height proportional
                 const minSize = cHeight * 0.02;
                 const maxSize = cHeight * 0.25;
                 const sizeRatio = count / Math.max(maxCount, 1);
-                const petalHeight = (minSize + sizeRatio * (maxSize - minSize)) * scale;
-                const petalWidth = (cWidth * 0.005 + sizeRatio * cWidth * 0.12) * scale;
+                let petalHeight = (minSize + sizeRatio * (maxSize - minSize)) * scale;
+
+                // Reduce Yajurveda petal height in Self Realization, Liberation & Freedom, and Ethical Foundation
+                if (veda === "Yajurveda" &&
+                    (context.name === "Self-Realization" || context.name === "Liberation & Freedom" || context.name === "Ethical Foundation")) {
+                    petalHeight = petalHeight * 0.65;
+                }
+
+                // Reduce Atharvaveda petal height in Self-Realization, Ethical Foundation, and Liberation & Freedom
+                if (veda === "Atharvaveda" &&
+                    (context.name === "Self-Realization" || context.name === "Ethical Foundation" || context.name === "Liberation & Freedom")) {
+                    petalHeight = petalHeight * 0.65;
+                }
+
+                // Reduce Samaveda petal height in Self-Realization
+                if (veda === "Samaveda" && context.name === "Self-Realization") {
+                    petalHeight = petalHeight * 0.65;
+                }
+
+                // Reduce Rigveda petal height in Self-Realization to match Teacher-Student Transmission
+                if (veda === "Rigveda" && context.name === "Self-Realization") {
+                    petalHeight = petalHeight * 0.75;
+                }
+
+                // Reduce all petals in Sacred Utterances
+                if (context.name === "Sacred Utterances") {
+                    petalHeight = petalHeight * 0.75;
+                }
 
                 const petalAngles = [-150, -115, -65, -30];
                 const angle = petalAngles[petalIdx];
@@ -995,11 +1144,11 @@ function initContextViz() {
                     .attr("transform", `rotate(${angle + 90}, ${petalBaseX}, ${petalBaseY})`);
 
                 const petalPath = `M ${petalBaseX} ${petalBaseY}
-                    C ${petalBaseX - petalWidth * 0.6} ${petalBaseY - petalHeight * 0.3}
+                    C ${petalBaseX - petalWidth * 0.5} ${petalBaseY - petalHeight * 0.3}
                       ${petalBaseX - petalWidth * 0.5} ${petalBaseY - petalHeight * 0.7}
                       ${petalBaseX} ${petalBaseY - petalHeight}
                     C ${petalBaseX + petalWidth * 0.5} ${petalBaseY - petalHeight * 0.7}
-                      ${petalBaseX + petalWidth * 0.6} ${petalBaseY - petalHeight * 0.3}
+                      ${petalBaseX + petalWidth * 0.5} ${petalBaseY - petalHeight * 0.3}
                       ${petalBaseX} ${petalBaseY}`;
 
                 petalGroup.append("path")
@@ -1009,21 +1158,17 @@ function initContextViz() {
                     .attr("opacity", 0.9)
                     .style("pointer-events", "none");
 
-                const vedaSentences = (context.sentences || []).filter(s => s.veda === veda);
-                const totalLines = vedaSentences.length;
                 const basePointX = petalBaseX;
                 const basePointY = petalBaseY;
                 const tipPointX = petalBaseX;
                 const tipPointY = petalBaseY - petalHeight;
 
                 const sortedSentences = [...vedaSentences].sort((a, b) => a.score - b.score);
+                const startOffset = -totalSpread / 2;
 
                 sortedSentences.forEach((sentence, sIdx) => {
                     const lineThickness = 0.5 + sentence.score * 2;
-                    const t = totalLines > 1 ? (sIdx / (totalLines - 1)) : 0.5;
-                    const side = (t - 0.5) * 2;
-                    const bulgeFactor = 0.55;
-                    const bulgeX = side * petalWidth * bulgeFactor;
+                    const bulgeX = startOffset + (sIdx * fixedGap);
 
                     const ctrl1X = petalBaseX + bulgeX;
                     const ctrl1Y = petalBaseY - petalHeight * 0.35;
@@ -1032,18 +1177,24 @@ function initContextViz() {
 
                     const score = sentence.score;
                     let lineColor;
-                    if (score <= 0.2) {
-                        lineColor = "#FF868F";
-                    } else if (score <= 0.5) {
-                        lineColor = "#F86179";
+                    // Three categories: Low (<0.5), Medium (0.5-0.8), High (>0.8)
+                    if (score < 0.5) {
+                        lineColor = "#E39098";  // Low
                     } else if (score <= 0.8) {
-                        lineColor = "#B5204B";
+                        lineColor = "#D55971";  // Medium
                     } else {
-                        lineColor = "#8C052B";
+                        lineColor = "#B91645";  // High
                     }
 
                     const originalStrokeWidth = Math.max(lineThickness, 1);
                     const hoverStrokeWidth = originalStrokeWidth + 2;
+
+                    const contextTruthWord = extractTruthWords(sentence.text);
+                    const contextTooltipContent = `<h3>${context.name}</h3>
+                                       <p><strong>Veda:</strong> ${veda}</p>
+                                       <p><strong>Context Score:</strong> ${sentence.score.toFixed(2)}</p>
+                                       <p><strong>Truth Word:</strong> <span class="truth-word">${contextTruthWord}</span></p>
+                                       <p>${sentence.text}</p>`;
 
                     petalGroup.append("path")
                         .attr("d", `M ${basePointX} ${basePointY}
@@ -1059,24 +1210,28 @@ function initContextViz() {
                         .style("pointer-events", "stroke")
                         .on("mouseover", function(event) {
                             d3.select(this).attr("opacity", 1).attr("stroke-width", hoverStrokeWidth);
-                            const truthWord = extractTruthWords(sentence.text);
-                            showTooltipAt(event, `<h3>${context.name}</h3>
-                                       <p><strong>Veda:</strong> ${veda}</p>
-                                       <p><strong>Context Score:</strong> ${sentence.score.toFixed(2)}</p>
-                                       <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
-                                       <p>${sentence.text}</p>`);
+                            showTooltipAt(event, contextTooltipContent);
                         })
                         .on("mouseout", function() {
                             d3.select(this).attr("opacity", 0.7).attr("stroke-width", originalStrokeWidth);
                             hideTooltipNow();
                         })
                         .on("mousemove", function(event) {
-                            const truthWord = extractTruthWords(sentence.text);
-                            showTooltipAt(event, `<h3>${context.name}</h3>
-                                       <p><strong>Veda:</strong> ${veda}</p>
-                                       <p><strong>Context Score:</strong> ${sentence.score.toFixed(2)}</p>
-                                       <p><strong>Truth Word:</strong> <span class="truth-word">${truthWord}</span></p>
-                                       <p>${sentence.text}</p>`);
+                            showTooltipAt(event, contextTooltipContent);
+                        })
+                        .on("touchstart", function(event) {
+                            event.preventDefault();
+                            if (activeTooltipElement === this) {
+                                hideTooltipNow();
+                                d3.select(this).attr("opacity", 0.7).attr("stroke-width", originalStrokeWidth);
+                            } else {
+                                if (activeTooltipElement) {
+                                    d3.select(activeTooltipElement).attr("opacity", 0.7);
+                                }
+                                activeTooltipElement = this;
+                                d3.select(this).attr("opacity", 1).attr("stroke-width", hoverStrokeWidth);
+                                showTooltipAt(event, contextTooltipContent);
+                            }
                         });
                 });
             });
