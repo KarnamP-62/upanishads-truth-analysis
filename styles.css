@@ -856,6 +856,108 @@ body {
     text-align: right;
 }
 
+/* ==================== FOOTER SECTION ==================== */
+.footer-section {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    position: relative;
+    background: linear-gradient(180deg,
+        #F1EDE2 0%,
+        #E8E4D8 5%,
+        #C5DAE5 15%,
+        #A8CCD9 30%,
+        #8FC2D4 50%,
+        #7AB8CE 70%,
+        #6AACC8 100%);
+    overflow: hidden;
+}
+
+/* Multiple wave layers covering the entire section */
+.footer-section::before,
+.footer-section::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 100%;
+    pointer-events: none;
+}
+
+.footer-section::before {
+    top: 0;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='none' stroke='%2395C4D4' stroke-width='1.5' d='M0,50 C240,20 480,80 720,50 C960,20 1200,80 1440,50'/%3E%3C/svg%3E") repeat-x,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='none' stroke='%2388BED0' stroke-width='1' d='M0,50 C300,80 600,20 900,50 C1200,80 1350,30 1440,50'/%3E%3C/svg%3E") repeat-x,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='none' stroke='%237BB5C9' stroke-width='1' d='M0,50 C200,30 400,70 600,50 C800,30 1000,70 1200,50 C1350,35 1400,55 1440,50'/%3E%3C/svg%3E") repeat-x;
+    background-size: 1440px 60px, 1440px 80px, 1440px 100px;
+    background-position: 0 20%, 0 45%, 0 70%;
+    opacity: 0.6;
+}
+
+.footer-section::after {
+    top: 0;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='none' stroke='%236DABC5' stroke-width='1' d='M0,50 C180,70 360,30 540,50 C720,70 900,30 1080,50 C1260,70 1380,40 1440,50'/%3E%3C/svg%3E") repeat-x,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='none' stroke='%2360A3BE' stroke-width='1.5' d='M0,50 C280,25 560,75 840,50 C1120,25 1320,65 1440,50'/%3E%3C/svg%3E") repeat-x;
+    background-size: 1440px 70px, 1440px 90px;
+    background-position: 0 55%, 0 85%;
+    opacity: 0.5;
+}
+
+.footer-content {
+    max-width: 800px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.footer-content h3 {
+    font-size: calc(0.6rem + 1.4vw);
+    color: #2A3F01;
+    margin-bottom: 2.5rem;
+    font-weight: 600;
+}
+
+.sources-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 3rem;
+}
+
+.sources-list li {
+    margin-bottom: 1rem;
+}
+
+.sources-list a {
+    color: #526B0B;
+    text-decoration: none;
+    font-size: calc(0.25rem + 0.75vw);
+    transition: color 0.3s ease;
+}
+
+.sources-list a:hover {
+    color: #2A3F01;
+    text-decoration: underline;
+}
+
+.copyright {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(82, 107, 11, 0.3);
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.copyright p {
+    color: #555;
+    font-size: calc(0.2rem + 0.6vw);
+    margin-bottom: 0.3rem;
+}
+
 /* ==================== TOUCH AND MOBILE INTERACTIONS ==================== */
 @media (hover: none) and (pointer: coarse) {
     /* Touch device optimizations */
